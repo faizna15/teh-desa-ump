@@ -8,8 +8,8 @@ RUN npm install
 
 COPY . .
 
-# Samakan dengan port internal pintu masuk Railway
+# Samakan dengan port pintu masuk dinamis internal Railway
 EXPOSE 8080
 
-# Jalur eksekusi file utama backend
+# Mengarah ke folder backend/server.js
 CMD ["node", "backend/server.js"]
