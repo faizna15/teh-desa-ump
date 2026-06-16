@@ -5,7 +5,13 @@ const bcrypt = require('bcryptjs'); // Untuk enkripsi password
 const jwt = require('jsonwebtoken'); // Untuk token login
 
 const app = express();
-app.use(cors());
+
+// PENTING: PENGATURAN CORS TERBUKA UNTUK VERCEL
+app.use(cors({
+  origin: '*', // Mengizinkan domain Vercel mengakses API tanpa diblokir browser
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 // Mengambil JWT Secret dari environment variable, jika tidak ada pakai default lokal
