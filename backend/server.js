@@ -11,12 +11,12 @@ app.use(express.json());
 const JWT_SECRET = 'teh_desa_secret_key_ump';
 
 // Koneksi ke Database MySQL
-
 const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: '', // Kosongkan jika pakai XAMPP default
-  database: 'teh_desa_ump'
+  password: '',
+  database: 'teh_desa_ump',
+  port: 3306
 });
 
 db.connect((err) => {
@@ -27,26 +27,29 @@ db.connect((err) => {
   console.log('Sukses terkoneksi ke Database MySQL (teh_desa_ump)!');
 });
 
-// FITUR CREATE (SIMPAN PESANAN)
-
+// FITUR CREATE (SIMPAN PESANAN) - VERSI BULK INSERT MULTI-MENU (SINKRON FORM BARU)
 app.post('/api/pesanan', (req, res) => {
-  const { nama, email, menu, jumlah, catatan } = req.body;
+  const { nama, catatan, items } = req.body;
 
-  // Validasi Backend: Memastikan input tidak kosong dan jumlah rasional
-
-  if (!nama || !email || jumlah < 1) {
-    return res.status(400).json({ message: 'Data tidak valid atau kurang lengkap!' });
+  // Validasi data array items dari frontend
+  if (!nama || !items || !Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ message: 'Data tidak valid atau pesanan kosong!' });
   }
 
-  const sqlInsert = "INSERT INTO orders (nama, email, menu, jumlah, catatan) VALUES (?, ?, ?, ?, ?)";
-  db.query(sqlInsert, [nama, email, menu, jumlah, catatan], (err, result) => {
+  // Memetakan array objek
+  const values = items.map(item => [nama, item.menu, item.jumlah, catatan]);
+
+  // Menggunakan tanda tanya tunggal (?) di dalam array untuk bulk insert bertingkat
+  const sqlInsertBulk = "INSERT INTO orders (nama, menu, jumlah, catatan) VALUES ?";
+  
+  db.query(sqlInsertBulk, [values], (err, result) => {
     if (err) {
-      console.error(err);
-      return res.status(500).json({ message: 'Gagal menyimpan ke database' });
+      console.error('Gagal melakukan Bulk Insert:', err);
+      return res.status(500).json({ message: 'Gagal menyimpan semua item pesanan ke database!' });
     }
     res.status(200).json({ 
-      message: `Halo ${nama}, pesanan ${menu} berhasil masuk ke database!`,
-      orderId: result.insertId 
+      message: `Halo ${nama}, sebanyak ${result.affectedRows} jenis menu berhasil dimasukkan ke database!`,
+      affectedRows: result.affectedRows 
     });
   });
 });
@@ -64,29 +67,37 @@ app.post('/api/admin/register', async (req, res) => {
   });
 });
 
-// Endpoint Login Admin
-
+// Endpoint Login Admin - MENGGUNAKAN METHOD SYNCHRONOUS
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
   const sqlFindAdmin = "SELECT * FROM admins WHERE username = ?";
   
-  db.query(sqlFindAdmin, [username], async (err, results) => {
-    if (err || results.length === 0) return res.status(401).json({ message: 'Username tidak ditemukan!' });
+  db.query(sqlFindAdmin, [username], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: 'Eror pada server database!' });
+    }
+
+    if (results.length === 0) {
+      return res.status(401).json({ message: 'Username tidak ditemukan!' });
+    }
     
     const admin = results[0];
-    const isPasswordValid = await bcrypt.compare(password, admin.password);
     
-    if (!isPasswordValid) return res.status(401).json({ message: 'Password salah!' });
+    // compareSync mengecek password real-time tanpa delay async callback
+    const isPasswordValid = bcrypt.compareSync(password, admin.password);
+    
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Password salah!' });
+    }
     
     // Generate token JWT jika login sukses
-
     const token = jwt.sign({ id: admin.id, username: admin.username }, JWT_SECRET, { expiresIn: '1h' });
     res.status(200).json({ message: 'Login Berhasil!', token });
   });
 });
 
-// FITUR READ (DASHBOARD AMBIL DATA)
-
+// FITUR READ (DASHBOARD AMBIL DATA) - VERSI REVISI URUTAN (DIPROSES SELALU DI ATAS & ID TERBARU)
 app.get('/api/pesanan', (req, res) => {
   // Proteksi endpoint menggunakan token header
   const token = req.headers['authorization'];
@@ -94,7 +105,15 @@ app.get('/api/pesanan', (req, res) => {
 
   try {
     jwt.verify(token, JWT_SECRET);
-    const sqlSelect = "SELECT * FROM orders ORDER BY id DESC";
+    
+    // TRICK SQL: Urutkan status 'Diproses' (1) agar di atas 'Selesai' (2), lalu urutkan ID terbaru (DESC)
+    const sqlSelect = `
+      SELECT * FROM orders 
+      ORDER BY 
+        CASE WHEN status = 'Diproses' THEN 1 ELSE 2 END ASC, 
+        id DESC
+    `;
+    
     db.query(sqlSelect, (err, results) => {
       if (err) return res.status(500).json({ message: 'Gagal mengambil data' });
       res.status(200).json(results);
@@ -105,7 +124,6 @@ app.get('/api/pesanan', (req, res) => {
 });
 
 // FITUR UPDATE STATUS PESANAN
-
 app.put('/api/pesanan/:id', (req, res) => {
   const { id } = req.params;
   const { status } = req.body; // status: 'Selesai' atau 'Diproses'
