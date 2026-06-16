@@ -7,10 +7,14 @@ const AdminDashboard = () => {
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [token, setToken] = useState(localStorage.getItem('adminToken') || '');
 
+  // Efek untuk memantau token valid
   useEffect(() => {
-    if (token) {
+    if (token && token !== 'undefined' && token !== 'null') {
       setIsLoggedIn(true);
       fetchOrders(token);
+    } else {
+      // Jika token di localStorage ternyata sampah/invalid, bersihkan otomatis
+      handleLogout();
     }
   }, [token]);
 
@@ -20,23 +24,29 @@ const AdminDashboard = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    console.log("Mencoba login dengan payload:", loginForm);
+
     try {
       const res = await fetch('https://teh-desa-backend-production.up.railway.app/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(loginForm)
       });
+      
       const data = await res.json();
-      if (res.ok) {
+      console.log("Respons login dari server:", data);
+
+      if (res.ok && data.token) {
         localStorage.setItem('adminToken', data.token);
         setToken(data.token);
         setIsLoggedIn(true);
-        alert(data.message);
+        alert(data.message || "Login Berhasil!");
       } else {
-        alert(data.message);
+        alert(data.message || "Username atau password salah!");
       }
     } catch (err) {
-      alert('Gagal terhubung ke server login cloud!');
+      console.error("Error saat handleLogin:", err);
+      alert('Gagal terhubung ke server login cloud! Pastikan Variables di Railway sudah di-apply.');
     }
   };
 
@@ -46,14 +56,20 @@ const AdminDashboard = () => {
         headers: { 'Authorization': authToken }
       });
       const data = await res.json();
+      
       if (res.ok) {
-        setOrders(data);
+        // Cek apakah data berupa array, jika berupa objek error dari catch backend, lempar ke else
+        if (Array.isArray(data)) {
+          setOrders(data);
+        } else {
+          alert(data.message || "Gagal memuat struktur data antrean.");
+        }
       } else {
-        alert(data.message);
+        alert(data.message || "Sesi habis, silakan login kembali.");
         handleLogout();
       }
     } catch (err) {
-      console.error('Gagal mengambil data:', err);
+      console.error('Gagal mengambil data pesanan:', err);
     }
   };
 
@@ -69,7 +85,7 @@ const AdminDashboard = () => {
         fetchOrders(token);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Error saat update status:", err);
     }
   };
 
