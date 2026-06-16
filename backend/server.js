@@ -28,13 +28,13 @@ db.connect((err) => {
   console.log(`Sukses terkoneksi ke Database MySQL (${process.env.DB_NAME || 'teh_desa_ump'})!`);
 });
 
-// PENTING: RUTE UTAMA AGAR SERVER TIDAK TIMEOUT
+// LANDING ROUTE AGAR RAILWAY TIDAK TIMEOUT / CRASHED
 app.get('/', (req, res) => {
   res.send('Backend Teh Desa UMP is running perfectly!');
 });
 
 // 2. ENDPOINT / FITUR-FITUR API
-// FITUR CREATE (SIMPAN PESANAN) - VERSI BULK INSERT MULTI-MENU (SINKRON FORM BARU)
+// FITUR CREATE (SIMPAN PESANAN) - VERSI BULK INSERT MULTI-MENU
 app.post('/api/pesanan', (req, res) => {
   const { nama, catatan, items } = req.body;
 
@@ -74,7 +74,7 @@ app.post('/api/admin/register', async (req, res) => {
   });
 });
 
-// Endpoint Login Admin - MENGGUNAKAN METHOD SYNCHRONOUS
+// Endpoint Login Admin
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
   const sqlFindAdmin = "SELECT * FROM admins WHERE username = ?";
@@ -90,15 +90,12 @@ app.post('/api/admin/login', (req, res) => {
     }
     
     const admin = results[0];
-    
-    // compareSync mengecek password real-time tanpa delay async callback
     const isPasswordValid = bcrypt.compareSync(password, admin.password);
     
     if (!isPasswordValid) {
       return res.status(401).json({ message: 'Password salah!' });
     }
     
-    // Generate token JWT jika login sukses
     const token = jwt.sign({ id: admin.id, username: admin.username }, JWT_SECRET, { expiresIn: '1h' });
     res.status(200).json({ message: 'Login Berhasil!', token });
   });
@@ -106,14 +103,12 @@ app.post('/api/admin/login', (req, res) => {
 
 // FITUR READ (DASHBOARD AMBIL DATA)
 app.get('/api/pesanan', (req, res) => {
-  // Proteksi endpoint menggunakan token header
   const token = req.headers['authorization'];
   if (!token) return res.status(403).json({ message: 'Akses ditolak, butuh token login!' });
 
   try {
     jwt.verify(token, JWT_SECRET);
     
-    // TRICK SQL
     const sqlSelect = `
       SELECT * FROM orders 
       ORDER BY 
@@ -133,7 +128,7 @@ app.get('/api/pesanan', (req, res) => {
 // FITUR UPDATE STATUS PESANAN
 app.put('/api/pesanan/:id', (req, res) => {
   const { id } = req.params;
-  const { status } = req.body; // status: 'Selesai' atau 'Diproses'
+  const { status } = req.body;
 
   const sqlUpdate = "UPDATE orders SET status = ? WHERE id = ?";
   db.query(sqlUpdate, [status, id], (err, result) => {
