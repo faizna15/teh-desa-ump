@@ -8,15 +8,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const JWT_SECRET = 'teh_desa_secret_key_ump';
+// Mengambil JWT Secret dari environment variable, jika tidak ada pakai default lokal
+const JWT_SECRET = process.env.JWT_SECRET || 'teh_desa_secret_key_ump';
 
-// Koneksi ke Database MySQL
+// 1. KONEKSI DATABASE (FLEKSIBEL LOKAL/CLOUD)
 const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'teh_desa_ump',
-  port: 3306
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'teh_desa_ump',
+  port: process.env.DB_PORT || 3306
 });
 
 db.connect((err) => {
@@ -24,9 +25,15 @@ db.connect((err) => {
     console.error('Koneksi MySQL Gagal:', err);
     return;
   }
-  console.log('Sukses terkoneksi ke Database MySQL (teh_desa_ump)!');
+  console.log(`Sukses terkoneksi ke Database MySQL (${process.env.DB_NAME || 'teh_desa_ump'})!`);
 });
 
+// PENTING: RUTE UTAMA AGAR SERVER TIDAK TIMEOUT
+app.get('/', (req, res) => {
+  res.send('Backend Teh Desa UMP is running perfectly!');
+});
+
+// 2. ENDPOINT / FITUR-FITUR API
 // FITUR CREATE (SIMPAN PESANAN) - VERSI BULK INSERT MULTI-MENU (SINKRON FORM BARU)
 app.post('/api/pesanan', (req, res) => {
   const { nama, catatan, items } = req.body;
@@ -97,7 +104,7 @@ app.post('/api/admin/login', (req, res) => {
   });
 });
 
-// FITUR READ (DASHBOARD AMBIL DATA) - VERSI REVISI URUTAN (DIPROSES SELALU DI ATAS & ID TERBARU)
+// FITUR READ (DASHBOARD AMBIL DATA)
 app.get('/api/pesanan', (req, res) => {
   // Proteksi endpoint menggunakan token header
   const token = req.headers['authorization'];
@@ -106,7 +113,7 @@ app.get('/api/pesanan', (req, res) => {
   try {
     jwt.verify(token, JWT_SECRET);
     
-    // TRICK SQL: Urutkan status 'Diproses' (1) agar di atas 'Selesai' (2), lalu urutkan ID terbaru (DESC)
+    // TRICK SQL
     const sqlSelect = `
       SELECT * FROM orders 
       ORDER BY 
@@ -135,6 +142,8 @@ app.put('/api/pesanan/:id', (req, res) => {
   });
 });
 
-app.listen(5000, () => {
-  console.log('Server Backend UAS berjalan di port 5000');
+// 3. RUNNING SERVER WITH DYNAMIC PORT (DEFAULT 8080 FOR DOCKER RAILWAY)
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server Backend UAS berjalan di port ${PORT}`);
 });
