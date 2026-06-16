@@ -8,7 +8,8 @@ RUN npm install
 
 COPY . .
 
-EXPOSE 5000
+# Samakan dengan port internal pintu masuk Railway
+EXPOSE 8080
 
-# Kita arahkan jalurnya ke dalam folder backend/server.js
+# Jalur eksekusi file utama backend
 CMD ["node", "backend/server.js"]
