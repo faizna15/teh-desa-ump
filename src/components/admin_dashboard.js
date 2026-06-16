@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './admin_dashboard.css'; // Memanggil file style modern dashboard
+import './admin_dashboard.css';
 
 const AdminDashboard = () => {
   const [orders, setOrders] = useState([]);
@@ -14,16 +14,14 @@ const AdminDashboard = () => {
     }
   }, [token]);
 
-  // LOGIKA STATISTIK OTOMATIS
   const totalPesanan = orders.length;
   const totalDiproses = orders.filter(o => o.status !== 'Selesai').length;
   const totalSelesai = orders.filter(o => o.status === 'Selesai').length;
 
-  // Fungsi Login Admin
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:5000/api/admin/login', {
+      const res = await fetch('https://teh-desa-backend-production.up.railway.app/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(loginForm)
@@ -38,19 +36,18 @@ const AdminDashboard = () => {
         alert(data.message);
       }
     } catch (err) {
-      alert('Gagal terhubung ke server login!');
+      alert('Gagal terhubung ke server login cloud!');
     }
   };
 
-  // Ambil Data Pesanan (Fitur READ)
   const fetchOrders = async (authToken) => {
     try {
-      const res = await fetch('http://localhost:5000/api/pesanan', {
+      const res = await fetch('https://teh-desa-backend-production.up.railway.app/api/pesanan', {
         headers: { 'Authorization': authToken }
       });
       const data = await res.json();
       if (res.ok) {
-        setOrders(data); // Menerima data yang sudah di-sorting CASE WHEN dari backend
+        setOrders(data);
       } else {
         alert(data.message);
         handleLogout();
@@ -60,17 +57,16 @@ const AdminDashboard = () => {
     }
   };
 
-  // Mengubah Status Pesanan (Fitur UPDATE)
   const updateStatus = async (id, statusBaru) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/pesanan/${id}`, {
+      const res = await fetch(`https://teh-desa-backend-production.up.railway.app/api/pesanan/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: statusBaru })
       });
       if (res.ok) {
         alert('Status Berhasil Diperbarui!');
-        fetchOrders(token); // Refresh data tabel otomatis
+        fetchOrders(token);
       }
     } catch (err) {
       console.error(err);
@@ -84,7 +80,6 @@ const AdminDashboard = () => {
     setOrders([]);
   };
 
-  // TAMPILAN FORM LOGIN JIKA BELUM TERAUTENTIKASI
   if (!isLoggedIn) {
     return (
       <div className="form-card" style={{ maxWidth: '100%', margin: '40px auto' }}>
@@ -100,18 +95,13 @@ const AdminDashboard = () => {
     );
   }
 
-  // TAMPILAN DASHBOARD UTAMA JIKA SUDAH BERHASIL LOGIN
   return (
     <div className="admin-dashboard-container">
-      
-      {/* HEADER DASHBOARD */}
       <div className="admin-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div className="header-text">
           <h2>Dashboard Admin</h2>
           <p>Kendali Manajemen Pesanan Lapak Teh Desa UMP</p>
         </div>
-        
-        {/* TOMBOL KELUAR - SUDAH DIKECILKAN UKURANNYA */}
         <button 
           className="btn-logout" 
           onClick={handleLogout}
@@ -127,7 +117,6 @@ const AdminDashboard = () => {
         </button>
       </div>
 
-      {/* WIDGET KARTU STATISTIK REAL-TIME */}
       <div className="stats-grid">
         <div className="stat-card total">
           <div className="stat-icon">📦</div>
@@ -152,7 +141,6 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* TABEL DATA ANTREAN UTAMA */}
       <div className="table-wrapper">
         <div className="table-title">
           <h3>📋 Antrean Pesanan Masuk </h3>
@@ -168,7 +156,6 @@ const AdminDashboard = () => {
             </tr>
           </thead>
           <tbody>
-            {/* Mengikuti urutan query murni database (Tanpa di-reverse paksa lagi) */}
             {orders.map((order) => (
               <tr key={order.id} className={order.status === 'Selesai' ? 'row-selesai' : ''}>
                 <td className="font-bold">{order.nama}</td>
@@ -193,7 +180,6 @@ const AdminDashboard = () => {
           </tbody>
         </table>
       </div>
-
     </div>
   );
 };
