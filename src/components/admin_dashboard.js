@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './admin_dashboard.css'; // Memanggil file style modern dashboard
 
 const AdminDashboard = () => {
   const [orders, setOrders] = useState([]);
@@ -12,6 +13,11 @@ const AdminDashboard = () => {
       fetchOrders(token);
     }
   }, [token]);
+
+  // LOGIKA STATISTIK OTOMATIS
+  const totalPesanan = orders.length;
+  const totalDiproses = orders.filter(o => o.status !== 'Selesai').length;
+  const totalSelesai = orders.filter(o => o.status === 'Selesai').length;
 
   // Fungsi Login Admin
   const handleLogin = async (e) => {
@@ -44,7 +50,7 @@ const AdminDashboard = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        setOrders(data);
+        setOrders(data); // Menerima data yang sudah di-sorting CASE WHEN dari backend
       } else {
         alert(data.message);
         handleLogout();
@@ -64,7 +70,7 @@ const AdminDashboard = () => {
       });
       if (res.ok) {
         alert('Status Berhasil Diperbarui!');
-        fetchOrders(token); // Refresh data tabel
+        fetchOrders(token); // Refresh data tabel otomatis
       }
     } catch (err) {
       console.error(err);
@@ -81,7 +87,6 @@ const AdminDashboard = () => {
   // TAMPILAN FORM LOGIN JIKA BELUM TERAUTENTIKASI
   if (!isLoggedIn) {
     return (
-      // SUDAH DIPERBAIKI: maxWidth diubah menjadi '100%' agar tidak lagi terhimpit seuprit
       <div className="form-card" style={{ maxWidth: '100%', margin: '40px auto' }}>
         <h3 style={{ textAlign: 'center', color: '#166534' }}>Login Admin Teh Desa</h3>
         <form onSubmit={handleLogin}>
@@ -95,46 +100,100 @@ const AdminDashboard = () => {
     );
   }
 
-  // TAMPILAN DASHBOARD UTAMA JIKA SUDAH LOGIN
+  // TAMPILAN DASHBOARD UTAMA JIKA SUDAH BERHASIL LOGIN
   return (
-    <div style={{ marginTop: '40px', padding: '20px', background: '#fff', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h3 style={{ color: '#166534', margin: 0 }}>Dashboard Admin: Kendali Pesanan UMP</h3>
-        <button onClick={handleLogout} style={{ padding: '8px 15px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+    <div className="admin-dashboard-container">
+      
+      {/* HEADER DASHBOARD */}
+      <div className="admin-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="header-text">
+          <h2>Dashboard Admin</h2>
+          <p>Kendali Manajemen Pesanan Lapak Teh Desa UMP</p>
+        </div>
+        
+        {/* TOMBOL KELUAR - SUDAH DIKECILKAN UKURANNYA */}
+        <button 
+          className="btn-logout" 
+          onClick={handleLogout}
+          style={{ 
+            width: 'auto', 
+            padding: '8px 16px', 
+            fontSize: '14px', 
+            maxWidth: '120px',
+            height: 'fit-content'
+          }}
+        >
           🔒 Keluar
         </button>
       </div>
 
-      <table border="1" cellPadding="10" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', borderColor: '#eee' }}>
-        <thead>
-          <tr style={{ background: '#166534', color: '#fff' }}>
-            <th>Nama</th>
-            <th>Menu</th>
-            <th>Jumlah</th>
-            <th>Status</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          {orders.map((order) => (
-            <tr key={order.id}>
-              <td>{order.nama}</td>
-              <td>{order.menu}</td>
-              <td>{order.jumlah}</td>
-              <td style={{ fontWeight: 'bold', color: order.status === 'Selesai' ? '#166534' : '#d97706' }}>
-                {order.status || 'Diproses'}
-              </td>
-              <td>
-                {order.status !== 'Selesai' && (
-                  <button onClick={() => updateStatus(order.id, 'Selesai')} style={{ padding: '5px 10px', background: '#166534', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                    Tandai Selesai
-                  </button>
-                )}
-              </td>
+      {/* WIDGET KARTU STATISTIK REAL-TIME */}
+      <div className="stats-grid">
+        <div className="stat-card total">
+          <div className="stat-icon">📦</div>
+          <div className="stat-info">
+            <h4>{totalPesanan}</h4>
+            <p>Total Masuk</p>
+          </div>
+        </div>
+        <div className="stat-card pending">
+          <div className="stat-icon">⏳</div>
+          <div className="stat-info">
+            <h4>{totalDiproses}</h4>
+            <p>Sedang Diproses</p>
+          </div>
+        </div>
+        <div className="stat-card success">
+          <div className="stat-icon">✅</div>
+          <div className="stat-info">
+            <h4>{totalSelesai}</h4>
+            <p>Selesai Pickup</p>
+          </div>
+        </div>
+      </div>
+
+      {/* TABEL DATA ANTREAN UTAMA */}
+      <div className="table-wrapper">
+        <div className="table-title">
+          <h3>📋 Antrean Pesanan Masuk </h3>
+        </div>
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Nama Pemesan</th>
+              <th>Varian Menu</th>
+              <th>Jumlah</th>
+              <th>Status</th>
+              <th>Aksi</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {/* Mengikuti urutan query murni database (Tanpa di-reverse paksa lagi) */}
+            {orders.map((order) => (
+              <tr key={order.id} className={order.status === 'Selesai' ? 'row-selesai' : ''}>
+                <td className="font-bold">{order.nama}</td>
+                <td>{order.menu}</td>
+                <td><span className="badge-jumlah">{order.jumlah} Cup</span></td>
+                <td>
+                  <span className={`status-badge ${order.status === 'Selesai' ? 'status-complete' : 'status-proses'}`}>
+                    {order.status || 'Diproses'}
+                  </span>
+                </td>
+                <td>
+                  {order.status !== 'Selesai' ? (
+                    <button className="btn-action-done" onClick={() => updateStatus(order.id, 'Selesai')}>
+                      Tandai Selesai
+                    </button>
+                  ) : (
+                    <span className="text-muted">Selesai ✨</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
     </div>
   );
 };

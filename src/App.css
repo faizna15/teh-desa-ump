@@ -30,7 +30,12 @@ body {
 .logo { font-weight: 700; color: #166534; font-size: 1.2rem; }
 .nav-links a { text-decoration: none; color: #666; margin-left: 20px; font-size: 0.9rem; }
 
-.container { max-width: 600px; margin: 0 auto; padding: 20px; }
+.container { 
+max-width: 600px;
+margin: 0 auto; 
+padding: 20px 40px !important;
+box-sizing: border-box !important;
+}
 
 .hero-section { text-align: center; padding: 40px 0; }
 .hero-section h1 { color: #166534; font-size: 1.8rem; margin-bottom: 10px; }
@@ -184,4 +189,51 @@ input, select, textarea { width: 100%; padding: 12px; margin: 8px 0 20px 0; bord
 
 .container .admin-section button:hover {
   background-color: #14532d !important;
+}
+
+/* Mengubah style link teks lama di navbar menjadi tombol modern transparan */
+.nav-btn {
+  background: none;
+  border: none;
+  color: #666666;
+  font-size: 0.9rem;
+  font-family: 'Inter', sans-serif;
+  margin-left: 20px;
+  padding: 6px 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+}
+
+.nav-btn:hover {
+  color: #166534;
+}
+
+/* Penanda menu halaman yang sedang aktif dibuka (Garis bawah hijau khas UAS) */
+.nav-btn.active {
+  color: #166534 !important;
+  font-weight: 700;
+  border-bottom: 2px solid #166534 !important;
+}
+
+/* Kontainer pembungkus halaman tunggal agar transisi mulus & menghentikan penumpukan */
+.page-wrapper {
+  animation: pageFadeIn 0.4s ease-in-out;
+  width: 100%;
+  display: block;
+}
+
+/* UI Loading Fallback saat file Admin Dashboard diunduh (Lazy Loading) */
+.admin-loading {
+  text-align: center;
+  padding: 50px;
+  color: #166534;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }

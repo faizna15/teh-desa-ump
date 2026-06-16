@@ -1,0 +1,148 @@
+.menu-page-container {
+  width: 100% !important; 
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+  padding: 20px !important;
+  box-sizing: border-box !important;
+}
+
+.menu-page-header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.menu-page-header h2 {
+  color: #166534;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.menu-page-header p {
+  color: #666666;
+  font-size: 0.95rem;
+}
+
+/* BANNER KATEGORI */
+.menu-section-group {
+  margin-bottom: 40px;
+  width: 100%;
+  text-align: left;
+}
+
+.category-banner {
+  background: #166534;
+  color: #ffffff;
+  padding: 8px 20px;
+  border-radius: 10px;
+  display: inline-block;
+  margin-bottom: 5px;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(22, 101, 52, 0.15);
+}
+
+.category-banner h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.menu-products-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 20px !important;
+  width: 100% !important;
+  max-width: 1200px !important;
+  margin: 15px auto 0 auto !important;
+  box-sizing: border-box;
+}
+
+/* Styling Kartu */
+.product-card {
+  background: #ffffff;
+  padding: 0px;
+  border-radius: 18px;
+  border: 1px solid #eeeeee;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.product-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 20px rgba(22, 101, 52, 0.1);
+  border-color: #166534;
+}
+
+/* FIXED: Frame dipertinggi memanjang ke bawah agar rasio cup proporsional */
+.product-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 290px; /* Dinaikkan dari 200px agar memanjang ke bawah */
+  overflow: hidden;
+  background-color: #f9fafb; /* Latar belakang soft jika gambar punya rasio berbeda */
+}
+
+/* FIXED: Kualitas gambar halus dan AMAN DARI TERPOTONG (Contain) */
+.product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain !important; /* Diubah ke contain agar cup minuman tampil 100% utuh */
+  object-position: center center !important;
+  transition: transform 0.4s ease;
+  padding: 8px; /* Memberi sedikit nafas agar gambar tidak mentok ke garis border kartu */
+  box-sizing: border-box;
+  
+  /* Mengembalikan fungsi interpolasi piksel normal untuk foto realistis */
+  image-rendering: auto !important; 
+}
+
+.product-card:hover .product-image {
+  transform: scale(1.03);
+}
+
+.product-price-tag {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: #166534;
+  color: #ffffff;
+  padding: 5px 12px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+}
+
+.product-details {
+  padding: 15px;
+}
+
+.product-details h3 {
+  margin: 0 0 6px 0;
+  color: #166534;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.product-details p {
+  font-size: 0.8rem;
+  color: #666666;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* SCREEN HP RESPONSIVE */
+@media (max-width: 768px) {
+  .menu-products-grid {
+    grid-template-columns: 1fr !important;
+    gap: 15px !important;
+  }
+  .product-image-wrapper {
+    height: 260px; /* Sedikit disesuaikan untuk device mobile */
+  }
+}
