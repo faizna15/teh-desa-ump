@@ -99,12 +99,15 @@
 .stat-card.pending { border-left: 5px solid #d97706; }
 .stat-card.success { border-left: 5px solid #059669; }
 
+/* REPARASI JARAK TABEL BIAR GA KETIMPA */
 .table-wrapper {
   background: #ffffff;
   border-radius: 18px;
   border: 1px solid #eeeeee;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.02);
   overflow: hidden;
+  margin-top: 50px !important;
+  clear: both !important;
 }
 
 .table-title {
