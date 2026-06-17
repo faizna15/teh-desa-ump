@@ -82,7 +82,7 @@ function FormOrder() {
       items: itemPesanan
     };
 
-    fetch('http://localhost:5000/api/pesanan', {
+    fetch('https://teh-desa-backend-production.up.railway.app/api/pesanan', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
